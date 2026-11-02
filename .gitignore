@@ -1,0 +1,14 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Segredos e estado local
+.env
+*.db
+*.sqlite3
+.claude/
+
+# Pasta original baixada do Drive (os dados ficam em data/)
+Desafio_Técnico_AI_Engineer_*/
