@@ -52,6 +52,13 @@ def test_categoria_vazia_tem_flag(con, categoria):
     assert r["categoria_sem_produtos"] and r["produtos"] == []
 
 
+def test_busca_vazia_indica_categorias_com_produtos(con):
+    r = tools.buscar_produtos(con, categoria="Sopro")
+    assert "Violões" in r["categorias_com_produtos"]
+    assert not any("Sopro" in c for c in r["categorias_com_produtos"])
+    assert "categorias_com_produtos" not in tools.buscar_produtos(con, termo="Giannini GF-3D")
+
+
 def test_categoria_desconhecida(con):
     assert tools.buscar_produtos(con, categoria="Amplificadores")["erro"] == "categoria_desconhecida"
 
@@ -76,7 +83,7 @@ def test_takamine_promocao_expirada(con):
 def test_ohana_promocao_ativa_sem_pix(con):
     r = tools.consultar_preco(con, 121)
     assert r["preco_original"] == 549 and r["desconto_percentual"] == 20
-    assert r["preco_vigente"] == 439.2 and r["preco_pix"] is None and not r["pix_elegivel"]
+    assert r["preco_vigente"] == 439.2 and r["preco_pix"] is None and not r["desconto_pix_aplicavel"]
 
 
 def test_produto_inexistente(con):
@@ -99,6 +106,14 @@ def test_email_duplicado_nao_abre_pedido_alheio(con):
     # Bruno 43 tem o mesmo e-mail do 11, dono do pedido 10; só o telefone distingue os dois.
     assert tools.consultar_pedido(con, 10, "(67) 99456-3456") == {"erro": "verificacao_falhou"}
     assert tools.consultar_pedido(con, 10, "(67) 98543-2109")["pedido_id"] == 10
+
+
+def test_email_compartilhado_sozinho_nao_abre_pedido(con):
+    assert tools.consultar_pedido(con, 10, "bruno.martins@jmail.com") == {"erro": "telefone_necessario"}
+
+
+def test_simular_parcelas():
+    assert tools.simular_parcelas(429.9)["parcelamento"][-1] == {"parcelas": 5, "valor_parcela": 85.98}
 
 
 def test_total_divergente_e_o_gravado(con):

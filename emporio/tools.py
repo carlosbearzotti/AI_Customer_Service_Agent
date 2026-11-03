@@ -69,7 +69,7 @@ def _preco_dict(preco: domain.PrecoProduto) -> dict:
         "em_promocao": preco.em_promocao,
         "desconto_percentual": _float(preco.desconto_percentual),
         "preco_vigente": _float(preco.preco_vigente),
-        "pix_elegivel": preco.pix_elegivel,
+        "desconto_pix_aplicavel": preco.pix_elegivel,
         "preco_pix": _float(preco.preco_pix),
         "promocao_expirada": preco.promocao_expirada,
     }
@@ -138,6 +138,10 @@ def buscar_produtos(con, termo=None, categoria=None, preco_max=None, apenas_disp
             indisponiveis.append({**_produto_dict(con, p), "alternativas": _alternativas(con, p)})
 
     resposta["produtos"] = encontrados
+    if not encontrados and not indisponiveis:
+        # Dá ao modelo o que existe de fato, para ele não sugerir itens que a loja não tem.
+        resposta["categorias_com_produtos"] = [r[0] for r in con.execute(
+            "SELECT DISTINCT c.name FROM sellable_products p JOIN categories c USING (category_id) ORDER BY c.name")]
     if indisponiveis:
         resposta["indisponiveis"] = indisponiveis
     return resposta
@@ -161,6 +165,12 @@ def consultar_preco(con, produto_id) -> dict:
     }
 
 
+def simular_parcelas(valor) -> dict:
+    """Parcelamento de um valor qualquer, para perguntas sem produto definido."""
+    return {"parcelamento": [{"parcelas": o.parcelas, "valor_parcela": _float(o.valor_parcela)}
+                             for o in domain.calcular_opcoes_parcelamento(valor)]}
+
+
 def _contato_confere(pedido: sqlite3.Row, contato: str) -> bool:
     contato = (contato or "").strip()
     if "@" in contato:
@@ -180,6 +190,11 @@ def consultar_pedido(con, pedido_id, email_ou_telefone) -> dict:
     # Mesma resposta para pedido inexistente e contato errado: não revela quais pedidos existem.
     if pedido is None or not _contato_confere(pedido, email_ou_telefone):
         return {"erro": "verificacao_falhou"}
+    # E-mail compartilhado (clientes 11 e 43) não identifica o dono: só o telefone serve.
+    if "@" in email_ou_telefone and con.execute(
+        "SELECT COUNT(*) FROM customers WHERE email_norm = ?", (pedido["email_norm"],)
+    ).fetchone()[0] > 1:
+        return {"erro": "telefone_necessario"}
     itens = con.execute(
         "SELECT p.name, i.quantity FROM order_items i JOIN products p USING (product_id) "
         "WHERE i.order_id = ?", (pedido_id,),
@@ -233,7 +248,8 @@ def avaliar_prazo(tipo, data_compra=None, data_recebimento=None) -> dict:
     except ValueError as e:
         return {"erro": str(e)}
     return {"elegivel": r.elegivel, "motivo": r.motivo, "dias_decorridos": r.dias_decorridos,
-            "prazo_dias": r.prazo_dias, "data_referencia": hoje.isoformat()}
+            "prazo_dias": r.prazo_dias, "data_limite": r.data_limite.isoformat() if r.data_limite else None,
+            "data_referencia": hoje.isoformat()}
 
 
 def registrar_atendimento_humano(con, tipo, contato, resumo, pedido_id=None, agora=None) -> dict:
@@ -271,9 +287,13 @@ SCHEMAS = [
      "description": "Preço vigente, promoção ativa ou expirada, valor no PIX e parcelas de um produto.",
      "parameters": {"type": "object", "properties": {"produto_id": {"type": "integer"}},
                     "required": ["produto_id"]}},
+    {"name": "simular_parcelas",
+     "description": "Opções de parcelamento permitidas para um valor em reais, sem produto definido.",
+     "parameters": {"type": "object", "properties": {"valor": {"type": "number"}}, "required": ["valor"]}},
     {"name": "consultar_pedido",
      "description": "Status, rastreio e itens de um pedido. Exige número do pedido e e-mail ou "
-                    "telefone informados pelo cliente; nunca tente adivinhar.",
+                    "telefone informados pelo cliente; nunca tente adivinhar. Se o cliente informar "
+                    "os dois, envie o telefone. Erro telefone_necessario: peça o telefone da compra.",
      "parameters": {"type": "object", "properties": {
          "pedido_id": {"type": "integer"}, "email_ou_telefone": _string},
          "required": ["pedido_id", "email_ou_telefone"]}},
@@ -307,7 +327,7 @@ SCHEMAS = [
 _COM_CONEXAO = {"buscar_produtos": buscar_produtos, "consultar_preco": consultar_preco,
                 "consultar_pedido": consultar_pedido, "consultar_frete": consultar_frete,
                 "registrar_atendimento_humano": registrar_atendimento_humano}
-_SEM_CONEXAO = {"consultar_politica": consultar_politica, "avaliar_prazo": avaliar_prazo,
+_SEM_CONEXAO = {"consultar_politica": consultar_politica, "simular_parcelas": simular_parcelas, "avaliar_prazo": avaliar_prazo,
                 "verificar_expediente": verificar_expediente}
 
 

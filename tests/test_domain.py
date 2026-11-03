@@ -77,6 +77,11 @@ def test_arrependimento_conta_do_recebimento():
     assert not avaliar_elegibilidade_prazo("arrependimento", hoje, data_recebimento=date(2026, 3, 17)).elegivel
 
 
+def test_data_limite_conta_do_marco():
+    r = avaliar_elegibilidade_prazo("arrependimento", date(2026, 3, 25), data_recebimento=date(2026, 3, 20))
+    assert r.data_limite == date(2026, 3, 27)
+
+
 def test_sem_data_de_recebimento_pergunta():
     r = avaliar_elegibilidade_prazo("arrependimento", date(2026, 3, 25), data_compra=date(2026, 3, 1))
     assert r.elegivel is None and r.motivo == "aguardando_data_recebimento"

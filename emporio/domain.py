@@ -123,6 +123,7 @@ class Elegibilidade:
     motivo: str
     dias_decorridos: int | None = None
     prazo_dias: int | None = None
+    data_limite: date | None = None
 
 
 def avaliar_elegibilidade_prazo(
@@ -150,12 +151,13 @@ def avaliar_elegibilidade_prazo(
     if base is None:
         return Elegibilidade(None, f"aguardando_data_{marco}", prazo_dias=prazo)
     dias = (hoje - base).days
+    limite = base + timedelta(days=prazo)
     if dias < 0:
-        return Elegibilidade(None, "data_futura", dias, prazo)
+        return Elegibilidade(None, "data_futura", dias, prazo, limite)
     if dias <= prazo:
-        return Elegibilidade(True, "dentro_do_prazo", dias, prazo)
+        return Elegibilidade(True, "dentro_do_prazo", dias, prazo, limite)
     motivo = "fora_do_prazo_acionar_fabricante" if tipo == "defeito" else "fora_do_prazo"
-    return Elegibilidade(False, motivo, dias, prazo)
+    return Elegibilidade(False, motivo, dias, prazo, limite)
 
 
 @dataclass(frozen=True)
