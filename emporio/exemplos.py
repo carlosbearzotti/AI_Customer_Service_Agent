@@ -1,9 +1,15 @@
 """Gera examples/*.md rodando as conversas no agente real: python -m emporio.exemplos"""
+import tempfile
+from datetime import datetime
 from pathlib import Path
 
-from emporio.agent import Agente
-from emporio.cli import preparar_agente
+from emporio.agent import Agente, ClienteOpenAICompativel
+from emporio.cli import carregar_env
+from emporio.ingest import ingerir
+from emporio.tools import FUSO_LOJA, conectar
 
+# Horário fixo em expediente, coerente com REFERENCE_DATE, para os exemplos não dependerem do relógio.
+MOMENTO = datetime(2026, 3, 25, 10, 0, tzinfo=FUSO_LOJA)
 DESTINO = Path(__file__).resolve().parent.parent / "examples"
 CONVERSAS = {
     "01_catalogo": ["Quais opções de violões disponíveis custando até R$1000?"],
@@ -14,6 +20,7 @@ CONVERSAS = {
         "Meu e-mail é anacarol.ferreira@coldmail.com",
         "Me arrependi da compra, posso devolver?",
         "Recebi em 2026-03-20",
+        "Sim, pode registrar a devolução",
     ],
     "05_escopo_estoque_injecao": [
         "Vocês têm encordoamento 0.10 e o violão Giannini GF-3D?",
@@ -38,5 +45,12 @@ def gerar(nome: str, turnos: list[str], agente: Agente, destino: Path = DESTINO)
 
 
 if __name__ == "__main__":
-    for nome, turnos in CONVERSAS.items():
-        print(gerar(nome, turnos, preparar_agente()))
+    carregar_env()
+    # Banco temporário: os protocolos dos exemplos não se misturam aos do chat.
+    with tempfile.TemporaryDirectory() as pasta:
+        db = Path(pasta) / "exemplos.db"
+        ingerir(db)
+        con = conectar(db)
+        for nome, turnos in CONVERSAS.items():
+            print(gerar(nome, turnos, Agente(ClienteOpenAICompativel(), con, lambda: MOMENTO)))
+        con.close()
