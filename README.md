@@ -133,9 +133,10 @@ Os testes com o modelo real também corrigiram falhas que o LLM simulado não mo
 
 ## Uso de assistentes de código
 
-Usei o Claude em duas frentes:
+Usei o Claude como assistente em todo o projeto, e eu conduzi o trabalho:
 
-- **Claude (chat):** análise do case, revisão crítica da primeira arquitetura (que previa RAG vetorial e Clean Architecture), auditoria das inconsistências dos CSVs e definição do roadmap.
-- **Claude Code:** implementação de ingestão, domínio, tools, agente, CLI, testes e rascunho deste README, conferindo as regras contra o manual e os dados. Também rodou as conversas reais e revisou as respostas; esses testes revelaram, por exemplo, que o e-mail compartilhado pelos clientes 11 e 43 abria o pedido de um deles, corrigido com a exigência do telefone.
+- **Análise (Claude no chat):** revisão do case, auditoria das inconsistências dos CSVs e crítica da primeira arquitetura, que previa RAG vetorial e Clean Architecture.
+- **Implementação (Claude Code):** escrita do código e dos testes a partir das regras e do roadmap definidos, conferindo tudo contra o manual e os dados.
+- **Minha parte:** defini as restrições de custo e o escopo e discuti as decisões técnicas. Descartei o RAG vetorial por adicionar complexidade desnecessária a um manual de 8 páginas. Considerei um modelo local via Ollama para ter custo zero, mas escolhi um modelo por API (`deepseek-flash`), de custo baixo e com suporte a tool calling. Também revisei as respostas e o README e rodei testes manuais do agente com um roteiro de casos.
 
-As decisões de escopo e as restrições de custo foram minhas.
+Os testes com o modelo real foram o que mais agregou: revelaram, por exemplo, que o e-mail compartilhado pelos clientes 11 e 43 abria o pedido de um deles, corrigido com a exigência do telefone.
