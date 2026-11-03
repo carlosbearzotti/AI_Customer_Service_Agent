@@ -52,7 +52,7 @@ for n,(msgs,req,proib,tl,rep) in C.items():
     for m in msgs:
         print("CLIENTE:",m); r=a.responder(m); txt+=" "+r
         for c in a.chamadas: usadas.add(c["tool"]); print("  [tool]",c["tool"],"->",c["resultado"][:70])
-        print("TOM:",r,flush=True)
+        print("CARLOS:",r,flush=True)
     falt=[x for x in req if x.lower() not in txt.lower()]; pr=[x for x in proib if x.lower() in txt.lower()]; ft=[x for x in tl if x not in usadas]
     tot+=1; p=not(falt or pr or ft); ok+=p
     print(f">>> CASO {n}.{i+1}: {'OK' if p else 'FALHOU'} faltou={falt} proibido={pr} tools_faltando={ft}",flush=True)

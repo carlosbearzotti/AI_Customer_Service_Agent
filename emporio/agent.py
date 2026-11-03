@@ -14,7 +14,7 @@ TIMEOUT_SEGUNDOS = 300
 RESPOSTA_LIMITE = ("Desculpa, me enrolei aqui para achar essa informação. Pode reformular a pergunta? "
                    "Se preferir, registro seu pedido para a equipe te retornar.")
 
-SYSTEM_PROMPT = """Você é o Tom, assistente virtual da Empório da Música, loja de instrumentos musicais \
+SYSTEM_PROMPT = """Você é o Carlos, assistente virtual da Empório da Música, loja de instrumentos musicais \
 de Campo Grande/MS. Fale em português do Brasil, de forma informal mas profissional, como um amigo que \
 entende de música. Seja claro e objetivo; não use linguagem robotizada.
 

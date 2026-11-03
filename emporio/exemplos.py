@@ -37,7 +37,7 @@ def gerar(nome: str, turnos: list[str], agente: Agente, destino: Path = DESTINO)
         linhas.append(f"**Cliente:** {texto}\n")
         for c in agente.chamadas:
             linhas.append(f"> `{c['tool']}({c['argumentos']})`\n")
-        linhas.append(f"**Tom:** {resposta}\n")
+        linhas.append(f"**Carlos:** {resposta}\n")
     destino.mkdir(exist_ok=True)
     arquivo = destino / f"{nome}.md"
     arquivo.write_text("\n".join(linhas), encoding="utf-8")

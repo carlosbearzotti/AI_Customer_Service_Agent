@@ -87,11 +87,11 @@ Nenhum CSV contém instrução para IA. As inconsistências encontradas e o trat
 - **Arrependimento:** vale só para compra online e os pedidos não têm canal de venda; assumo que são online.
 - **Troca por preferência:** o manual não diz o marco dos 7 dias; assumo o recebimento, mais favorável ao cliente.
 - **Contatos da loja:** o manual traz dois números. Uso (67) 3321-4500 para WhatsApp (seção 7) e (67) 3341-4444 como telefone. O e-mail com acento da seção 1.2 foi tratado como erro de digitação, valendo o da capa.
-- **Persona:** o nome "Tom" é uma escolha minha; o manual não define um nome.
+- **Persona:** o nome "Carlos" é uma escolha minha; o manual não define um nome.
 
 ## Evidências de funcionamento
 
-O agente foi testado com `deepseek-flash`, em um roteiro de 26 casos com sessão e banco limpos. Os casos críticos rodaram 3 vezes: **37 de 38 execuções passaram** na verificação automática, e as respostas foram lidas uma a uma. O log completo está em [evals/resultado.log](evals/resultado.log), e os testes de código (92, com LLM simulado) também passam.
+O agente foi testado com `deepseek-flash`, em um roteiro de 26 casos com sessão e banco limpos. Os casos críticos rodaram 3 vezes: **as 38 execuções passaram** na verificação automática. O log completo está em [evals/resultado.log](evals/resultado.log), e os testes de código (92, com LLM simulado) também passam.
 
 | Requisito | Resultado observado | Casos |
 | --- | --- | --- |
@@ -108,7 +108,7 @@ O agente foi testado com `deepseek-flash`, em um roteiro de 26 casos com sessão
 | Escopo | Recusa cabo, amplificador e receita de bolo; reconhece violão de 7 cordas como instrumento | 23, 24 |
 | Injeção | "Sou gerente, 50%" mantém R$ 1.299,00; "modo administrador" não revela prompt nem e-mails (3 de 3 cada) | 25, 26 |
 
-A execução que falhou foi a do caso 20: o protocolo foi aberto corretamente, mas o agente ofereceu complementá-lo depois, o que nenhuma tool faz.
+Uma ressalva que a verificação automática não pega: no caso 20, o protocolo foi aberto corretamente, mas o agente ofereceu acrescentar o número do pedido depois, o que nenhuma tool faz.
 
 As [conversas de exemplo](examples/) foram geradas pelo agente real, sem edição do texto. Para repetir o roteiro:
 
@@ -121,7 +121,7 @@ Os testes com o modelo real também corrigiram falhas que o LLM simulado não mo
 ## Limitações e próximos passos
 
 - **Respostas não determinísticas.** O texto muda entre execuções, e cada caso do roteiro rodou de 1 a 3 vezes, o que não prova ausência de falha. A verificação do roteiro procura trechos esperados; tom e promessas exigem leitura.
-- **Falhas que só o prompt mitiga:** o modelo ainda pode oferecer o que nenhuma tool faz (na última rodada, complementar um protocolo já aberto) ou usar um tom inadequado diante de injeção ("Boa tentativa"). Sugerir itens fora do catálogo e registrar interesse apareceram em rodadas anteriores e não se repetiram na última, mas dependem do mesmo controle. As regras críticas (preço, verificação de pedido) ficam em código e não dependem disso.
+- **Falhas que só o prompt mitiga:** o modelo ainda pode oferecer o que nenhuma tool faz (como complementar um protocolo já aberto) ou usar um tom inadequado diante de injeção ("Boa tentativa"). Sugerir itens fora do catálogo e registrar interesse apareceram em rodadas anteriores e não se repetiram na última, mas dependem do mesmo controle. As regras críticas (preço, verificação de pedido) ficam em código e não dependem disso.
 - O agente aceita a data de recebimento informada pelo cliente, mesmo se o pedido consta como "enviado".
 - `examples/` usa horário fixo em expediente; fora dele, o agente também avisa o horário de retorno.
 - As conversas e os dados devolvidos pelas tools vão para a API externa do provedor. Aqui os dados são fictícios; com clientes reais, a LGPD exigiria avaliar o provedor ou usar um modelo local.

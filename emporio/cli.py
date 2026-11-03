@@ -29,7 +29,7 @@ def preparar_agente(cliente=None, relogio=None) -> Agente:
 
 
 def conversar(agente: Agente, trace: bool = False, entrada=input, saida=print) -> None:
-    saida('Empório da Música: oi! Sou o Tom. Digite "sair" para encerrar.')
+    saida('Empório da Música: oi! Sou o Carlos. Digite "sair" para encerrar.')
     while True:
         try:
             texto = entrada("você> ").strip()
@@ -47,7 +47,7 @@ def conversar(agente: Agente, trace: bool = False, entrada=input, saida=print) -
         if trace:
             for c in agente.chamadas:
                 saida(f"  [tool] {c['tool']}({c['argumentos']}) -> {c['resultado'][:200]}")
-        saida(f"tom> {resposta}")
+        saida(f"carlos> {resposta}")
 
 
 def main() -> None:

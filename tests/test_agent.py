@@ -120,13 +120,13 @@ def test_cli_sobrevive_a_erro_e_encerra(con):
     agente = Agente(Roteiro(ErroLLM("caiu"), {"content": "resposta"}), con)
     entradas, saidas = iter(["a", "", "\ufffc", "▾ -", "b", "sair"]), []
     cli.conversar(agente, entrada=lambda _: next(entradas), saida=saidas.append)
-    assert any("[erro]" in s for s in saidas) and "tom> resposta" in saidas
+    assert any("[erro]" in s for s in saidas) and "carlos> resposta" in saidas
 
 
 def test_gerador_de_exemplos_registra_tools(con, tmp_path):
     llm = Roteiro(tool_call("consultar_preco", {"produto_id": 95}), {"content": "R$ 2.199"})
     texto = exemplos.gerar("t", ["Preço?"], Agente(llm, con), tmp_path).read_text(encoding="utf-8")
-    assert "**Cliente:** Preço?" in texto and "consultar_preco" in texto and "**Tom:** R$ 2.199" in texto
+    assert "**Cliente:** Preço?" in texto and "consultar_preco" in texto and "**Carlos:** R$ 2.199" in texto
 
 
 @pytest.fixture
