@@ -42,7 +42,7 @@ def conversar(agente: Agente, trace: bool = False, entrada=input, saida=print) -
         try:
             resposta = agente.responder(texto)
         except ErroLLM as e:
-            saida(f"[erro] {e}\nConfira se o modelo está rodando (ver README).")
+            saida(f"[erro] {e}\nConfira a configuração do .env e o acesso ao provedor (ver README).")
             continue
         if trace:
             for c in agente.chamadas:

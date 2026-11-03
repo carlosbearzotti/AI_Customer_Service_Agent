@@ -14,7 +14,7 @@ cp .env.example .env
 python3 -m emporio.cli --trace
 ```
 
-`--trace` mostra as tools chamadas em cada turno. Para usar outro modelo ou provedor, altere as variáveis `LLM_*`: qualquer endpoint compatível com `/chat/completions` serve, inclusive um modelo local no Ollama (`http://localhost:11434/v1`).
+`--trace` mostra as tools chamadas em cada turno. Para usar outro modelo ou provedor, altere as variáveis `LLM_*`: o cliente usa o formato `/chat/completions`, aceito por outros provedores. Só o DeepSeek foi testado; um modelo local no Ollama (`http://localhost:11434/v1`) deve funcionar pelo mesmo formato, mas não foi validado, e o uso correto das tools depende do modelo.
 
 Outros comandos:
 

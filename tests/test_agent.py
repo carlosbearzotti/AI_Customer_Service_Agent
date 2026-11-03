@@ -120,7 +120,7 @@ def test_cli_sobrevive_a_erro_e_encerra(con):
     agente = Agente(Roteiro(ErroLLM("caiu"), {"content": "resposta"}), con)
     entradas, saidas = iter(["a", "", "\ufffc", "▾ -", "b", "sair"]), []
     cli.conversar(agente, entrada=lambda _: next(entradas), saida=saidas.append)
-    assert any("[erro]" in s for s in saidas) and "carlos> resposta" in saidas
+    assert any("[erro]" in s and ".env" in s for s in saidas) and "carlos> resposta" in saidas
 
 
 def test_gerador_de_exemplos_registra_tools(con, tmp_path):
