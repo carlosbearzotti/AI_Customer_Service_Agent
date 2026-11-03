@@ -10,7 +10,7 @@ from emporio.tools import conectar
 COMANDOS_SAIDA = {"sair", "exit", "quit"}
 
 
-def carregar_env(path: Path = Path(".env")) -> None:
+def carregar_env(path: Path = DB_PATH.parent.parent / ".env") -> None:
     """Lê KEY=valor do .env sem sobrescrever o ambiente."""
     if not path.exists():
         return
@@ -21,11 +21,11 @@ def carregar_env(path: Path = Path(".env")) -> None:
             os.environ.setdefault(chave.strip(), valor.strip())
 
 
-def preparar_agente(cliente=None) -> Agente:
+def preparar_agente(cliente=None, relogio=None) -> Agente:
     carregar_env()
     if not DB_PATH.exists():
         ingerir()
-    return Agente(cliente or ClienteOpenAICompativel(), conectar())
+    return Agente(cliente or ClienteOpenAICompativel(), conectar(), relogio)
 
 
 def conversar(agente: Agente, trace: bool = False, entrada=input, saida=print) -> None:
@@ -37,7 +37,7 @@ def conversar(agente: Agente, trace: bool = False, entrada=input, saida=print) -
             return
         if texto.lower() in COMANDOS_SAIDA:
             return
-        if not texto:
+        if not any(c.isalnum() for c in texto):
             continue
         try:
             resposta = agente.responder(texto)

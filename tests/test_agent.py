@@ -1,6 +1,7 @@
 """Testes do loop com LLM simulado: não avaliam a qualidade das respostas do modelo."""
 import json
 import threading
+from datetime import datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import pytest
@@ -71,6 +72,36 @@ def test_argumentos_ja_em_dict_sao_aceitos(con):
     assert json.loads(llm.recebido[1][-1]["content"])["produto_id"] == 95
 
 
+def test_reasoning_content_volta_ao_modelo(con):
+    chamada = {**tool_call("verificar_expediente", {}), "reasoning_content": "pensei"}
+    llm = Roteiro(chamada, {"content": "fim", "reasoning_content": "concluí"}, {"content": "ok"})
+    agente = Agente(llm, con)
+    agente.responder("x")
+    assert llm.recebido[1][2]["reasoning_content"] == "pensei"
+    agente.responder("y")
+    assert [m.get("reasoning_content") for m in llm.recebido[2] if m["role"] == "assistant"] == ["pensei", "concluí"]
+
+
+@pytest.mark.parametrize("agora,trecho", [
+    (datetime(2026, 3, 25, 10, 0), "em horário de atendimento"),
+    (datetime(2026, 3, 29, 10, 0), "retorna em segunda-feira às 09:00"),
+])
+def test_expediente_vai_no_prompt_sem_depender_do_modelo(con, agora, trecho):
+    agente = Agente(Roteiro({"content": "oi"}), con, relogio=lambda: agora)
+    agente.responder("x")
+    assert trecho in agente.historico[0]["content"]
+    assert str(agora.year) not in agente.historico[0]["content"].split("CONTEXTO ATUAL")[1]
+
+
+def test_aviso_de_fechado_so_no_primeiro_turno(con):
+    domingo = datetime(2026, 3, 29, 10, 0)
+    agente = Agente(Roteiro({"content": "oi"}, {"content": "ok"}), con, relogio=lambda: domingo)
+    agente.responder("a")
+    assert "nesta primeira resposta" in agente.historico[0]["content"]
+    agente.responder("b")
+    assert "Não repita o aviso" in agente.historico[0]["content"]
+
+
 def test_loop_tem_limite(con):
     llm = Roteiro(*[tool_call("verificar_expediente", {}) for _ in range(MAX_ITERACOES)])
     assert Agente(llm, con).responder("x") == RESPOSTA_LIMITE
@@ -87,7 +118,7 @@ def test_falha_do_llm_desfaz_o_turno(con):
 
 def test_cli_sobrevive_a_erro_e_encerra(con):
     agente = Agente(Roteiro(ErroLLM("caiu"), {"content": "resposta"}), con)
-    entradas, saidas = iter(["a", "", "b", "sair"]), []
+    entradas, saidas = iter(["a", "", "\ufffc", "▾ -", "b", "sair"]), []
     cli.conversar(agente, entrada=lambda _: next(entradas), saida=saidas.append)
     assert any("[erro]" in s for s in saidas) and "tom> resposta" in saidas
 
@@ -127,6 +158,18 @@ def test_cliente_http_envia_formato_compativel(servidor):
     assert r["content"] == "oi" and recebido["path"] == "/v1/chat/completions"
     assert recebido["auth"] == "Bearer k" and recebido["corpo"]["model"] == "m"
     assert recebido["corpo"]["tools"][0]["type"] == "function"
+
+
+def test_cliente_http_envia_parametros_extras(servidor):
+    url, recebido = servidor
+    ClienteOpenAICompativel(url, "m", "k", '{"thinking": {"type": "disabled"}}').completar([], [])
+    assert recebido["corpo"]["thinking"] == {"type": "disabled"}
+
+
+def test_cliente_sem_chave_explica_o_problema(monkeypatch):
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    with pytest.raises(ErroLLM, match="LLM_API_KEY"):
+        ClienteOpenAICompativel("http://127.0.0.1:9/v1", "m").completar([], [])
 
 
 def test_cliente_http_sem_servidor_vira_erro_llm():
